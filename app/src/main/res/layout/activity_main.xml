@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:alpha="0.75"
+            android:text="@string/app_subtitle"
+            android:textSize="13sp" />
+
+        <!-- Quick Actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTriggerCts"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:text="@string/test_cts" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStartLiveTranslate"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:text="@string/toggle_live_translate" />
+        </LinearLayout>
+
+        <!-- Required Setup -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/section_setup"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOverlayPermission"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:text="@string/grant_overlay" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAssistantSettings"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:text="@string/set_google_assistant" />
+        </LinearLayout>
+
+        <!-- Edge Screen Swipe -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/section_edge_swipe"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchEdgeSwipe"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/enable_edge_swipe" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/edge_side" />
+
+        <Spinner
+            android:id="@+id/spinnerEdgeSide"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/swipe_in_action" />
+
+        <Spinner
+            android:id="@+id/spinnerSwipeIn"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/swipe_up_action" />
+
+        <Spinner
+            android:id="@+id/spinnerSwipeUp"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/swipe_down_action" />
+
+        <Spinner
+            android:id="@+id/spinnerSwipeDown"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/edge_y_pos" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderYPos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="5"
+            android:valueFrom="10"
+            android:valueTo="85" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/edge_height" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderHeight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="10"
+            android:valueFrom="60"
+            android:valueTo="280" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/edge_opacity" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderAlpha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="5"
+            android:valueFrom="0"
+            android:valueTo="100" />
+
+        <!-- Live Translate Settings -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/section_live_translate"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/target_language" />
+
+        <Spinner
+            android:id="@+id/spinnerTargetLang"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/ocr_script" />
+
+        <Spinner
+            android:id="@+id/spinnerOcrScript"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchVibrate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/vibrate_on_trigger" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnApplySettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
+            android:text="@string/save_apply" />
+
+    </LinearLayout>
+</ScrollView>

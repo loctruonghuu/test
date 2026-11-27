@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">MiCTS+ Live Translate</string>
+    <string name="app_subtitle">Circle to Search + On-Screen Live Translate + Edge Swipe (No Accessibility, No Dev Options)</string>
+
+    <string name="test_cts">Circle to Search</string>
+    <string name="toggle_live_translate">Live Translate</string>
+
+    <string name="section_setup">Setup (No Accessibility / No Dev Options)</string>
+    <string name="grant_overlay">Grant Overlay</string>
+    <string name="overlay_granted">Overlay Granted ✓</string>
+    <string name="set_google_assistant">Default Assistant</string>
+
+    <string name="section_edge_swipe">Edge Screen Swipe</string>
+    <string name="enable_edge_swipe">Enable Edge Swipe Handle</string>
+    <string name="edge_side">Handle Side</string>
+    <string name="swipe_in_action">Swipe Inward Action</string>
+    <string name="swipe_up_action">Swipe Up Action</string>
+    <string name="swipe_down_action">Swipe Down Action</string>
+    <string name="edge_y_pos">Vertical Position (%)</string>
+    <string name="edge_height">Handle Height (dp)</string>
+    <string name="edge_opacity">Handle Visibility (%)</string>
+
+    <string name="section_live_translate">Live Screen Translate (ML Kit On-Device)</string>
+    <string name="target_language">Translate Into</string>
+    <string name="ocr_script">Screen OCR Script</string>
+    <string name="vibrate_on_trigger">Vibrate on Trigger</string>
+    <string name="save_apply">Save &amp; Apply</string>
+
+    <string name="tile_cts">Circle to Search</string>
+    <string name="tile_translate">Live Translate</string>
+    <string name="shortcut_cts">Circle to Search</string>
+    <string name="shortcut_translate">Live Translate</string>
+
+    <string name="edge_channel_name">Edge Swipe Service</string>
+    <string name="edge_notif_title">Edge Swipe Active</string>
+    <string name="edge_notif_text">Swipe from the screen edge for Circle to Search or Live Translate</string>
+
+    <string name="translate_channel_name">Live Screen Translate</string>
+    <string name="translate_notif_title">Live Translate Active</string>
+    <string name="translate_notif_text">Translating on-screen text locally with ML Kit</string>
+    <string name="stop">Stop</string>
+
+    <string name="overlay_permission_required">Please grant "Display over other apps" permission first.</string>
+    <string name="cts_trigger_failed">Trigger failed! Set Google as Default Digital Assistant.</string>
+    <string name="translate_projection_failed">Screen capture permission was not granted.</string>
+    <string name="settings_saved">Settings saved &amp; applied!</string>
+</resources>

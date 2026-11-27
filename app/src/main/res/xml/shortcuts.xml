@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="trigger_cts"
+        android:enabled="true"
+        android:icon="@drawable/ic_cts"
+        android:shortcutShortLabel="@string/shortcut_cts">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.zek.mictsplus"
+            android:targetClass="com.zek.mictsplus.ui.TriggerCtsActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="live_translate"
+        android:enabled="true"
+        android:icon="@drawable/ic_translate"
+        android:shortcutShortLabel="@string/shortcut_translate">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.zek.mictsplus"
+            android:targetClass="com.zek.mictsplus.ui.TranslateConsentActivity" />
+    </shortcut>
+</shortcuts>
