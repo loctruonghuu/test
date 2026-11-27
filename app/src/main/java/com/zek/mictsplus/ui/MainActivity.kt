@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.zek.mictsplus.Prefs
@@ -17,41 +18,21 @@ import com.zek.mictsplus.R
 import com.zek.mictsplus.cts.CircleToSearchTrigger
 import com.zek.mictsplus.databinding.ActivityMainBinding
 import com.zek.mictsplus.edge.EdgeSwipeService
-import com.zek.mictsplus.translate.LiveTranslateService
+import com.zek.mictsplus.honor.HonorTranslateTrigger
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private val langEntries = listOf(
-        "English" to "en",
-        "Vietnamese" to "vi",
-        "Chinese (Simplified)" to "zh",
-        "Japanese" to "ja",
-        "Korean" to "ko",
-        "Spanish" to "es",
-        "French" to "fr",
-        "German" to "de",
-        "Thai" to "th"
-    )
-
-    private val scriptEntries = listOf(
-        "Chinese + Latin (Best for CN ROM)" to "chinese",
-        "Japanese + Latin" to "japanese",
-        "Korean + Latin" to "korean",
-        "Latin Only (Fastest)" to "latin"
-    )
-
     private val sideEntries = listOf(
-        "Right Edge" to Prefs.SIDE_RIGHT,
+        "Right Edge (Default)" to Prefs.SIDE_RIGHT,
         "Left Edge" to Prefs.SIDE_LEFT,
         "Both Edges" to Prefs.SIDE_BOTH
     )
 
     private val actionEntries = listOf(
-        "Circle to Search" to Prefs.ACTION_CTS,
-        "Live Translate (Continuous)" to Prefs.ACTION_LIVE_TRANSLATE,
-        "Snap Translate (Once)" to Prefs.ACTION_SNAP_TRANSLATE,
+        "Circle to Search (MiCTS)" to Prefs.ACTION_CTS,
+        "Honor MagicOS AI Translate" to Prefs.ACTION_HONOR_TRANSLATE,
         "None" to Prefs.ACTION_NONE
     )
 
@@ -95,25 +76,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSpinners() {
-        // Target language
-        binding.spinnerTargetLang.adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            langEntries.map { it.first }
-        )
-        val curLangIdx = langEntries.indexOfFirst { it.second == Prefs.getTargetLang(this) }.coerceAtLeast(0)
-        binding.spinnerTargetLang.setSelection(curLangIdx)
-
-        // OCR Script
-        binding.spinnerOcrScript.adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            scriptEntries.map { it.first }
-        )
-        val curScriptIdx = scriptEntries.indexOfFirst { it.second == Prefs.getOcrScript(this) }.coerceAtLeast(0)
-        binding.spinnerOcrScript.setSelection(curScriptIdx)
-
-        // Edge Side
         binding.spinnerEdgeSide.adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_dropdown_item,
@@ -122,7 +84,6 @@ class MainActivity : AppCompatActivity() {
         val curSideIdx = sideEntries.indexOfFirst { it.second == Prefs.getEdgeSide(this) }.coerceAtLeast(0)
         binding.spinnerEdgeSide.setSelection(curSideIdx)
 
-        // Gesture actions
         val actionLabels = actionEntries.map { it.first }
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, actionLabels)
         binding.spinnerSwipeIn.adapter = adapter
@@ -148,22 +109,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        binding.btnStartLiveTranslate.setOnClickListener {
-            if (LiveTranslateService.isRunning) {
-                LiveTranslateService.stop(this)
-                Toast.makeText(this, "Live Translate stopped", Toast.LENGTH_SHORT).show()
-            } else {
-                if (!Settings.canDrawOverlays(this)) {
-                    openOverlaySettings()
-                    return@setOnClickListener
-                }
-                TranslateConsentActivity.launch(this, continuous = true)
+        binding.btnTriggerHonorTranslate.setOnClickListener {
+            saveAllPreferences()
+            val ok = HonorTranslateTrigger.trigger(this)
+            if (!ok) {
+                Toast.makeText(this, R.string.honor_translate_failed, Toast.LENGTH_LONG).show()
             }
         }
 
-        binding.btnOverlayPermission.setOnClickListener {
-            openOverlaySettings()
-        }
+        binding.btnOverlayPermission.setOnClickListener { openOverlaySettings() }
 
         binding.btnAssistantSettings.setOnClickListener {
             try {
@@ -173,10 +127,63 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        binding.sliderYPos.value = Prefs.getEdgeYPercent(this).toFloat()
-        binding.sliderHeight.value = Prefs.getEdgeHeightDp(this).toFloat()
-        binding.sliderAlpha.value = Prefs.getEdgeAlpha(this).toFloat()
+        // Honor AI Translate custom component fields + scanner
+        binding.editHonorPkg.setText(Prefs.getHonorTranslatePkg(this))
+        binding.editHonorAct.setText(Prefs.getHonorTranslateActivity(this))
+
+        binding.btnScanHonorActivities.setOnClickListener {
+            val candidates = HonorTranslateTrigger.scanHonorTranslateActivities(this)
+            if (candidates.isEmpty()) {
+                Toast.makeText(this, R.string.no_honor_activities_found, Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+            val labels = candidates.map { it.label }.toTypedArray()
+            AlertDialog.Builder(this)
+                .setTitle(R.string.pick_honor_activity_title)
+                .setItems(labels) { _, which ->
+                    val chosen = candidates[which]
+                    binding.editHonorPkg.setText(chosen.packageName)
+                    binding.editHonorAct.setText(chosen.activityName)
+                    saveAllPreferences()
+                    Toast.makeText(this, "Selected: ${chosen.activityName.substringAfterLast('.')}", Toast.LENGTH_SHORT).show()
+                }
+                .setNeutralButton(R.string.reset_auto) { _, _ ->
+                    binding.editHonorPkg.setText("")
+                    binding.editHonorAct.setText("")
+                    saveAllPreferences()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
+
+        // Sliders with live labels
+        val initY = Prefs.getEdgeYPercent(this).toFloat()
+        val initHeight = Prefs.getEdgeHeightDp(this).toFloat()
+        val initAlpha = Prefs.getEdgeAlpha(this).toFloat()
+        val initTriggerDelay = Prefs.getTriggerDelayMs(this).toFloat()
+        val initHoldDelay = Prefs.getHoldDelayMs(this).toFloat()
+
+        binding.sliderYPos.value = initY
+        binding.sliderHeight.value = initHeight
+        binding.sliderAlpha.value = initAlpha
+        binding.sliderTriggerDelay.value = initTriggerDelay
+        binding.sliderHoldDelay.value = initHoldDelay
         binding.switchVibrate.isChecked = Prefs.isVibrateEnabled(this)
+
+        fun updateSliderLabels() {
+            binding.tvYPosLabel.text = getString(R.string.edge_y_pos_fmt, binding.sliderYPos.value.toInt())
+            binding.tvHeightLabel.text = getString(R.string.edge_height_fmt, binding.sliderHeight.value.toInt())
+            binding.tvAlphaLabel.text = getString(R.string.edge_opacity_fmt, binding.sliderAlpha.value.toInt())
+            binding.tvTriggerDelayLabel.text = getString(R.string.trigger_delay_fmt, binding.sliderTriggerDelay.value.toInt())
+            binding.tvHoldDelayLabel.text = getString(R.string.hold_delay_fmt, binding.sliderHoldDelay.value.toInt())
+        }
+        updateSliderLabels()
+
+        binding.sliderYPos.addOnChangeListener { _, _, _ -> updateSliderLabels() }
+        binding.sliderHeight.addOnChangeListener { _, _, _ -> updateSliderLabels() }
+        binding.sliderAlpha.addOnChangeListener { _, _, _ -> updateSliderLabels() }
+        binding.sliderTriggerDelay.addOnChangeListener { _, _, _ -> updateSliderLabels() }
+        binding.sliderHoldDelay.addOnChangeListener { _, _, _ -> updateSliderLabels() }
 
         binding.switchEdgeSwipe.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -204,8 +211,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveAllPreferences() {
-        Prefs.setTargetLang(this, langEntries[binding.spinnerTargetLang.selectedItemPosition].second)
-        Prefs.setOcrScript(this, scriptEntries[binding.spinnerOcrScript.selectedItemPosition].second)
         Prefs.setEdgeSide(this, sideEntries[binding.spinnerEdgeSide.selectedItemPosition].second)
         Prefs.setSwipeInAction(this, actionEntries[binding.spinnerSwipeIn.selectedItemPosition].second)
         Prefs.setSwipeUpAction(this, actionEntries[binding.spinnerSwipeUp.selectedItemPosition].second)
@@ -213,7 +218,11 @@ class MainActivity : AppCompatActivity() {
         Prefs.setEdgeYPercent(this, binding.sliderYPos.value.toInt())
         Prefs.setEdgeHeightDp(this, binding.sliderHeight.value.toInt())
         Prefs.setEdgeAlpha(this, binding.sliderAlpha.value.toInt())
+        Prefs.setTriggerDelayMs(this, binding.sliderTriggerDelay.value.toLong())
+        Prefs.setHoldDelayMs(this, binding.sliderHoldDelay.value.toLong())
         Prefs.setVibrateEnabled(this, binding.switchVibrate.isChecked)
+        Prefs.setHonorTranslatePkg(this, binding.editHonorPkg.text?.toString() ?: "")
+        Prefs.setHonorTranslateActivity(this, binding.editHonorAct.text?.toString() ?: "")
     }
 
     private fun openOverlaySettings() {

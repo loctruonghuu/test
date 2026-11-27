@@ -46,7 +46,6 @@ object CircleToSearchTrigger {
                 putBoolean("micts_trigger", true)
             }
 
-            // Flag 7 = SHOW_WITH_ASSIST (1) | SHOW_WITH_SCREENSHOT (2) | SHOW_SOURCE_ASSIST_GESTURE (4)
             val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 HiddenApiBypass.invoke(
                     iVimsClass,
@@ -75,17 +74,17 @@ object CircleToSearchTrigger {
         }
     }
 
-    private fun vibrate(context: Context) {
+    fun vibrate(context: Context, durationMs: Long = 18L) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
                 vm.defaultVibrator.vibrate(
-                    VibrationEffect.createOneShot(18, VibrationEffect.DEFAULT_AMPLITUDE)
+                    VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE)
                 )
             } else {
                 @Suppress("DEPRECATION")
                 val v = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                v.vibrate(VibrationEffect.createOneShot(18, VibrationEffect.DEFAULT_AMPLITUDE))
+                v.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE))
             }
         } catch (_: Throwable) {
         }

@@ -29,19 +29,17 @@ import androidx.core.app.ServiceCompat
 import com.zek.mictsplus.Prefs
 import com.zek.mictsplus.R
 import com.zek.mictsplus.cts.CircleToSearchTrigger
-import com.zek.mictsplus.translate.LiveTranslateService
+import com.zek.mictsplus.honor.HonorTranslateTrigger
 import com.zek.mictsplus.ui.MainActivity
-import com.zek.mictsplus.ui.TranslateConsentActivity
 import kotlin.math.abs
 
 /**
- * Persistent edge swipe handle using SYSTEM_ALERT_WINDOW only.
+ * Persistent bottom-right edge swipe handle using SYSTEM_ALERT_WINDOW only.
  * Works completely WITHOUT Accessibility Service or Developer Options.
  *
- * Gestures:
- *  - Swipe Inward -> Configurable (default: Circle to Search)
- *  - Swipe Up along edge -> Configurable (default: Live Continuous Translate)
- *  - Swipe Down along edge -> Configurable (default: Single-Snap Screen Translate)
+ * Supports:
+ *  - Custom Trigger Time Delay (ms): waits X ms after gesture before executing
+ *  - Custom Swipe-and-Hold Delay (ms): requires holding finger for X ms after swipe (0 = instant)
  */
 class EdgeSwipeService : Service() {
 
@@ -118,6 +116,7 @@ class EdgeSwipeService : Service() {
     }
 
     override fun onDestroy() {
+        mainHandler.removeCallbacksAndMessages(null)
         removeHandles()
         super.onDestroy()
     }
@@ -146,10 +145,9 @@ class EdgeSwipeService : Service() {
 
         val container = FrameLayout(this)
 
-        // Subtle pill visual indicator tucked flush against the edge
         val pill = View(this).apply {
             val pillWidth = (4 * density).toInt().coerceAtLeast(4)
-            val pillHeight = (heightPx * 0.55f).toInt()
+            val pillHeight = (heightPx * 0.58f).toInt()
             layoutParams = FrameLayout.LayoutParams(
                 pillWidth,
                 pillHeight,
@@ -160,11 +158,11 @@ class EdgeSwipeService : Service() {
                 cornerRadius = 100f
                 setColor(Color.WHITE)
             }
-            alpha = alphaRatio * 0.7f
+            alpha = alphaRatio * 0.75f
         }
         container.addView(pill)
 
-        // Request Android 10+ to exclude this small handle rect from the system Back gesture
+        // Exclude this edge handle rect from Android's system Back gesture
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             container.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
                 if (v.width > 0 && v.height > 0) {
@@ -187,10 +185,16 @@ class EdgeSwipeService : Service() {
             y = yPx
         }
 
-        val swipeThresholdPx = 38 * density
+        val swipeThresholdPx = 36 * density
         var downX = 0f
         var downY = 0f
         var triggered = false
+        var pendingHoldRunnable: Runnable? = null
+
+        fun cancelPendingHold() {
+            pendingHoldRunnable?.let { mainHandler.removeCallbacks(it) }
+            pendingHoldRunnable = null
+        }
 
         container.setOnTouchListener { _, event ->
             when (event.actionMasked) {
@@ -198,32 +202,50 @@ class EdgeSwipeService : Service() {
                     downX = event.rawX
                     downY = event.rawY
                     triggered = false
-                    pill.animate().alpha((alphaRatio + 0.45f).coerceAtMost(1f)).scaleX(1.6f).setDuration(90).start()
+                    cancelPendingHold()
+                    pill.animate().alpha((alphaRatio + 0.45f).coerceAtMost(1f)).scaleX(1.7f).setDuration(90).start()
                     true
                 }
 
                 MotionEvent.ACTION_MOVE -> {
-                    if (!triggered) {
+                    if (!triggered && pendingHoldRunnable == null) {
                         val dx = event.rawX - downX
                         val dy = event.rawY - downY
                         val inwardDx = if (isRight) -dx else dx
 
-                        if (inwardDx > swipeThresholdPx && inwardDx > abs(dy) * 1.1f) {
-                            triggered = true
-                            executeAction(Prefs.getSwipeInAction(this))
-                        } else if (-dy > swipeThresholdPx * 1.15f && abs(dy) > abs(dx) * 1.2f) {
-                            triggered = true
-                            executeAction(Prefs.getSwipeUpAction(this))
-                        } else if (dy > swipeThresholdPx * 1.15f && abs(dy) > abs(dx) * 1.2f) {
-                            triggered = true
-                            executeAction(Prefs.getSwipeDownAction(this))
+                        val matchedAction = when {
+                            inwardDx > swipeThresholdPx && inwardDx > abs(dy) * 1.1f ->
+                                Prefs.getSwipeInAction(this)
+                            -dy > swipeThresholdPx * 1.15f && abs(dy) > abs(dx) * 1.2f ->
+                                Prefs.getSwipeUpAction(this)
+                            dy > swipeThresholdPx * 1.15f && abs(dy) > abs(dx) * 1.2f ->
+                                Prefs.getSwipeDownAction(this)
+                            else -> null
+                        }
+
+                        if (matchedAction != null && matchedAction != Prefs.ACTION_NONE) {
+                            val holdMs = Prefs.getHoldDelayMs(this)
+                            if (holdMs <= 0L) {
+                                triggered = true
+                                scheduleActionWithDelay(matchedAction)
+                            } else {
+                                // Require holding the finger for holdMs before confirming trigger
+                                val r = Runnable {
+                                    triggered = true
+                                    pendingHoldRunnable = null
+                                    scheduleActionWithDelay(matchedAction)
+                                }
+                                pendingHoldRunnable = r
+                                mainHandler.postDelayed(r, holdMs)
+                            }
                         }
                     }
                     true
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    pill.animate().alpha(alphaRatio * 0.7f).scaleX(1f).setDuration(140).start()
+                    cancelPendingHold()
+                    pill.animate().alpha(alphaRatio * 0.75f).scaleX(1f).setDuration(140).start()
                     true
                 }
 
@@ -238,34 +260,25 @@ class EdgeSwipeService : Service() {
         }
     }
 
-    private fun executeAction(action: String) {
-        when (action) {
-            Prefs.ACTION_CTS -> {
-                val delay = Prefs.getTriggerDelayMs(this)
-                mainHandler.postDelayed({
+    private fun scheduleActionWithDelay(action: String) {
+        val delayMs = Prefs.getTriggerDelayMs(this)
+        mainHandler.postDelayed({
+            when (action) {
+                Prefs.ACTION_CTS -> {
                     val ok = CircleToSearchTrigger.trigger(this)
                     if (!ok) {
                         Toast.makeText(this, R.string.cts_trigger_failed, Toast.LENGTH_SHORT).show()
                     }
-                }, delay)
-            }
+                }
 
-            Prefs.ACTION_LIVE_TRANSLATE -> {
-                if (LiveTranslateService.isRunning) {
-                    LiveTranslateService.stop(this)
-                } else {
-                    TranslateConsentActivity.launch(this, continuous = true)
+                Prefs.ACTION_HONOR_TRANSLATE -> {
+                    val ok = HonorTranslateTrigger.trigger(this)
+                    if (!ok) {
+                        Toast.makeText(this, R.string.honor_translate_failed, Toast.LENGTH_LONG).show()
+                    }
                 }
             }
-
-            Prefs.ACTION_SNAP_TRANSLATE -> {
-                if (LiveTranslateService.isRunning) {
-                    LiveTranslateService.requestSingleSnap(this)
-                } else {
-                    TranslateConsentActivity.launch(this, continuous = false)
-                }
-            }
-        }
+        }, delayMs)
     }
 
     private fun removeHandles() {

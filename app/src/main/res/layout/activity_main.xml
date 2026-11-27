@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -15,7 +14,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_name"
-            android:textSize="24sp"
+            android:textSize="23sp"
             android:textStyle="bold" />
 
         <TextView
@@ -26,7 +25,7 @@
             android:text="@string/app_subtitle"
             android:textSize="13sp" />
 
-        <!-- Quick Actions -->
+        <!-- Quick Test Triggers -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -42,13 +41,13 @@
                 android:text="@string/test_cts" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnStartLiveTranslate"
+                android:id="@+id/btnTriggerHonorTranslate"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
-                android:text="@string/toggle_live_translate" />
+                android:text="@string/test_honor_translate" />
         </LinearLayout>
 
         <!-- Required Setup -->
@@ -85,7 +84,7 @@
                 android:text="@string/set_google_assistant" />
         </LinearLayout>
 
-        <!-- Edge Screen Swipe -->
+        <!-- Edge Screen Swipe (Bottom-Right Default) -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -146,23 +145,25 @@
             android:layout_height="44dp" />
 
         <TextView
+            android:id="@+id/tvYPosLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="@string/edge_y_pos" />
+            android:text="@string/edge_y_pos_fmt" />
 
         <com.google.android.material.slider.Slider
             android:id="@+id/sliderYPos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:stepSize="5"
+            android:stepSize="2"
             android:valueFrom="10"
-            android:valueTo="85" />
+            android:valueTo="98" />
 
         <TextView
+            android:id="@+id/tvHeightLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/edge_height" />
+            android:text="@string/edge_height_fmt" />
 
         <com.google.android.material.slider.Slider
             android:id="@+id/sliderHeight"
@@ -170,12 +171,13 @@
             android:layout_height="wrap_content"
             android:stepSize="10"
             android:valueFrom="60"
-            android:valueTo="280" />
+            android:valueTo="260" />
 
         <TextView
+            android:id="@+id/tvAlphaLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/edge_opacity" />
+            android:text="@string/edge_opacity_fmt" />
 
         <com.google.android.material.slider.Slider
             android:id="@+id/sliderAlpha"
@@ -185,49 +187,99 @@
             android:valueFrom="0"
             android:valueTo="100" />
 
-        <!-- Live Translate Settings -->
+        <!-- Custom Time Delays -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:text="@string/section_live_translate"
+            android:text="@string/section_timing"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvTriggerDelayLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/trigger_delay_fmt" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderTriggerDelay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="50"
+            android:valueFrom="0"
+            android:valueTo="1500" />
+
+        <TextView
+            android:id="@+id/tvHoldDelayLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/hold_delay_fmt" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderHoldDelay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="50"
+            android:valueFrom="0"
+            android:valueTo="1000" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchVibrate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/vibrate_on_trigger" />
+
+        <!-- Honor MagicOS AI Translate Target -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/section_honor_translate"
             android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/target_language" />
+            android:layout_marginTop="4dp"
+            android:alpha="0.75"
+            android:text="@string/honor_translate_hint"
+            android:textSize="12sp" />
 
-        <Spinner
-            android:id="@+id/spinnerTargetLang"
-            android:layout_width="match_parent"
-            android:layout_height="44dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/ocr_script" />
-
-        <Spinner
-            android:id="@+id/spinnerOcrScript"
-            android:layout_width="match_parent"
-            android:layout_height="44dp" />
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchVibrate"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnScanHonorActivities"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/vibrate_on_trigger" />
+            android:text="@string/scan_honor_activities" />
+
+        <EditText
+            android:id="@+id/editHonorPkg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:hint="@string/hint_honor_pkg"
+            android:inputType="textNoSuggestions"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/editHonorAct"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:hint="@string/hint_honor_act"
+            android:inputType="textNoSuggestions"
+            android:textSize="13sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnApplySettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="18dp"
             android:layout_marginBottom="24dp"
             android:text="@string/save_apply" />
 

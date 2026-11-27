@@ -5,11 +5,22 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <!-- Explicit package visibility for Honor MagicOS AI Translate & YOYO packages -->
+    <queries>
+        <package android:name="com.hihonor.magictranslate" />
+        <package android:name="com.hihonor.magicvoice" />
+        <package android:name="com.hihonor.lens" />
+        <package android:name="com.hihonor.scanner" />
+        <package android:name="com.hihonor.translate" />
+        <package android:name="com.hihonor.aitranslate" />
+        <package android:name="com.hihonor.aisubtitle" />
+        <package android:name="com.hihonor.vassistant" />
+    </queries>
 
     <application
         android:name=".MiCtsPlusApp"
@@ -33,7 +44,7 @@
                 android:resource="@xml/shortcuts" />
         </activity>
 
-        <!-- Transparent Activity to directly trigger Circle to Search (like MiCTS) -->
+        <!-- Transparent Activity to directly trigger Circle to Search (MiCTS) -->
         <activity
             android:name=".ui.TriggerCtsActivity"
             android:excludeFromRecents="true"
@@ -44,9 +55,9 @@
             android:taskAffinity=""
             android:theme="@style/Theme.MiCtsPlus.Transparent" />
 
-        <!-- Transparent Activity to request MediaProjection & start Live Translate -->
+        <!-- Transparent Activity to directly trigger Honor MagicOS AI Translate -->
         <activity
-            android:name=".ui.TranslateConsentActivity"
+            android:name=".ui.TriggerHonorTranslateActivity"
             android:excludeFromRecents="true"
             android:exported="true"
             android:finishOnTaskLaunch="true"
@@ -55,7 +66,7 @@
             android:taskAffinity=""
             android:theme="@style/Theme.MiCtsPlus.Transparent" />
 
-        <!-- Edge Screen Swipe Overlay Service (No Accessibility Service needed) -->
+        <!-- Edge Screen Swipe Overlay Service (Bottom-Right default, No Accessibility Service) -->
         <service
             android:name=".edge.EdgeSwipeService"
             android:enabled="true"
@@ -63,15 +74,8 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Edge swipe gesture handle to trigger Circle to Search and Live Screen Translate without Accessibility Services" />
+                android:value="Edge swipe gesture handle to trigger Circle to Search and Honor MagicOS AI Translate without Accessibility Services" />
         </service>
-
-        <!-- Live Screen Translate Service (MediaProjection + ML Kit OCR + Translate) -->
-        <service
-            android:name=".translate.LiveTranslateService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="mediaProjection" />
 
         <!-- Quick Settings Tile: Circle to Search -->
         <service
@@ -85,9 +89,9 @@
             </intent-filter>
         </service>
 
-        <!-- Quick Settings Tile: Live Translate -->
+        <!-- Quick Settings Tile: Honor AI Translate -->
         <service
-            android:name=".tiles.TranslateTileService"
+            android:name=".tiles.HonorTranslateTileService"
             android:exported="true"
             android:icon="@drawable/ic_translate"
             android:label="@string/tile_translate"
