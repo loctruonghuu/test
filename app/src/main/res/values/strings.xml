@@ -1,0 +1,52 @@
+<resources>
+    <string name="app_name">MiCTS+ Honor AI Translate</string>
+    <string name="app_subtitle">Circle to Search + Honor MagicOS AI Translate + Bottom-Right Edge Swipe (No Accessibility, No Dev Options)</string>
+
+    <string name="test_cts">Circle to Search</string>
+    <string name="test_honor_translate">Honor AI Translate</string>
+
+    <string name="section_setup">Setup (No Accessibility / No Dev Options)</string>
+    <string name="grant_overlay">Grant Overlay</string>
+    <string name="overlay_granted">Overlay Granted ✓</string>
+    <string name="set_google_assistant">Default Assistant</string>
+
+    <string name="section_edge_swipe">Edge Screen Swipe (Bottom-Right Default)</string>
+    <string name="enable_edge_swipe">Enable Edge Swipe Handle</string>
+    <string name="edge_side">Handle Side</string>
+    <string name="swipe_in_action">Swipe Inward Action</string>
+    <string name="swipe_up_action">Swipe Up Action</string>
+    <string name="swipe_down_action">Swipe Down Action</string>
+    <string name="edge_y_pos_fmt">Vertical Position: %1$d%% (90%% = Bottom)</string>
+    <string name="edge_height_fmt">Handle Height: %1$d dp</string>
+    <string name="edge_opacity_fmt">Handle Visibility: %1$d%%</string>
+
+    <string name="section_timing">Custom Time Delay</string>
+    <string name="trigger_delay_fmt">Trigger Time Delay: %1$d ms</string>
+    <string name="hold_delay_fmt">Swipe-and-Hold Delay: %1$d ms (0 = Instant)</string>
+    <string name="vibrate_on_trigger">Vibrate on Trigger</string>
+
+    <string name="section_honor_translate">Honor MagicOS AI Translate Target</string>
+    <string name="honor_translate_hint">Leave blank for Auto-Detect (com.hihonor.magictranslate), or tap Scan to pick a specific MagicOS AI Translate / Screen Translate activity.</string>
+    <string name="scan_honor_activities">Scan Honor AI Translate Activities</string>
+    <string name="hint_honor_pkg">Package (optional, e.g. com.hihonor.magictranslate)</string>
+    <string name="hint_honor_act">Activity class (optional, leave blank for default)</string>
+    <string name="pick_honor_activity_title">Select Honor AI Translate Activity</string>
+    <string name="reset_auto">Reset to Auto</string>
+    <string name="no_honor_activities_found">No exported Honor AI Translate activities found. Try typing the package name manually.</string>
+
+    <string name="save_apply">Save &amp; Apply</string>
+
+    <string name="tile_cts">Circle to Search</string>
+    <string name="tile_translate">Honor AI Translate</string>
+    <string name="shortcut_cts">Circle to Search</string>
+    <string name="shortcut_translate">Honor AI Translate</string>
+
+    <string name="edge_channel_name">Edge Swipe Service</string>
+    <string name="edge_notif_title">Edge Swipe Active</string>
+    <string name="edge_notif_text">Swipe from the bottom-right edge for Circle to Search or Honor AI Translate</string>
+
+    <string name="overlay_permission_required">Please grant "Display over other apps" permission first.</string>
+    <string name="cts_trigger_failed">Trigger failed! Set Google as Default Digital Assistant.</string>
+    <string name="honor_translate_failed">Could not launch Honor AI Translate. Tap "Scan Honor AI Translate Activities" to select the exact activity on your MagicOS version.</string>
+    <string name="settings_saved">Settings saved &amp; applied!</string>
+</resources>
