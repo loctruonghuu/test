@@ -14,6 +14,10 @@ object Prefs {
     const val SIDE_LEFT = 1
     const val SIDE_BOTH = 2
 
+    const val COMP_TYPE_ACTIVITY = "activity"
+    const val COMP_TYPE_SERVICE = "service"
+    const val COMP_TYPE_BROADCAST = "broadcast"
+
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE)
 
@@ -32,30 +36,30 @@ object Prefs {
         prefs(context).edit().putInt("edge_side", side).apply()
     }
 
-    // Default: 90% (Bottom of the right screen)
+    // Default: 105% (Very bottom of the right screen; range 10..150%)
     fun getEdgeYPercent(context: Context): Int =
-        prefs(context).getInt("edge_y_percent", 90)
+        prefs(context).getInt("edge_y_percent", 105).coerceIn(10, 150)
 
     fun setEdgeYPercent(context: Context, percent: Int) {
-        prefs(context).edit().putInt("edge_y_percent", percent.coerceIn(10, 98)).apply()
+        prefs(context).edit().putInt("edge_y_percent", percent.coerceIn(10, 150)).apply()
     }
 
     fun getEdgeHeightDp(context: Context): Int =
-        prefs(context).getInt("edge_height_dp", 120)
+        prefs(context).getInt("edge_height_dp", 120).coerceIn(60, 260)
 
     fun setEdgeHeightDp(context: Context, dp: Int) {
         prefs(context).edit().putInt("edge_height_dp", dp.coerceIn(60, 260)).apply()
     }
 
     fun getEdgeWidthDp(context: Context): Int =
-        prefs(context).getInt("edge_width_dp", 20)
+        prefs(context).getInt("edge_width_dp", 20).coerceIn(10, 36)
 
     fun setEdgeWidthDp(context: Context, dp: Int) {
         prefs(context).edit().putInt("edge_width_dp", dp.coerceIn(10, 36)).apply()
     }
 
     fun getEdgeAlpha(context: Context): Int =
-        prefs(context).getInt("edge_alpha", 35)
+        prefs(context).getInt("edge_alpha", 35).coerceIn(0, 100)
 
     fun setEdgeAlpha(context: Context, alpha: Int) {
         prefs(context).edit().putInt("edge_alpha", alpha.coerceIn(0, 100)).apply()
@@ -63,8 +67,8 @@ object Prefs {
 
     // Default Gestures:
     // Swipe Inward -> Circle to Search
-    // Swipe Up -> Honor MagicOS AI Translate
-    // Swipe Down -> Honor MagicOS AI Translate
+    // Swipe Up -> Honor MagicOS Screen Translation
+    // Swipe Down -> Honor MagicOS Screen Translation
     fun getSwipeInAction(context: Context): String =
         prefs(context).getString("action_swipe_in", ACTION_CTS) ?: ACTION_CTS
 
@@ -88,7 +92,7 @@ object Prefs {
 
     // Custom time delay BEFORE firing the action after gesture is detected (0..1500 ms)
     fun getTriggerDelayMs(context: Context): Long =
-        prefs(context).getLong("trigger_delay_ms", 100L)
+        prefs(context).getLong("trigger_delay_ms", 100L).coerceIn(0L, 1500L)
 
     fun setTriggerDelayMs(context: Context, delayMs: Long) {
         prefs(context).edit().putLong("trigger_delay_ms", delayMs.coerceIn(0L, 1500L)).apply()
@@ -96,7 +100,7 @@ object Prefs {
 
     // Custom swipe-and-hold delay (0 = instant on swipe, >0 = must hold finger after swipe for X ms)
     fun getHoldDelayMs(context: Context): Long =
-        prefs(context).getLong("hold_delay_ms", 0L)
+        prefs(context).getLong("hold_delay_ms", 0L).coerceIn(0L, 1000L)
 
     fun setHoldDelayMs(context: Context, delayMs: Long) {
         prefs(context).edit().putLong("hold_delay_ms", delayMs.coerceIn(0L, 1000L)).apply()
@@ -109,7 +113,7 @@ object Prefs {
         prefs(context).edit().putBoolean("vibrate_enabled", enabled).apply()
     }
 
-    // Optional custom Honor AI Translate package & activity (auto-detected if blank)
+    // Honor Screen Translation target component (auto-detected if blank)
     fun getHonorTranslatePkg(context: Context): String =
         prefs(context).getString("honor_translate_pkg", "") ?: ""
 
@@ -117,10 +121,17 @@ object Prefs {
         prefs(context).edit().putString("honor_translate_pkg", pkgName.trim()).apply()
     }
 
-    fun getHonorTranslateActivity(context: Context): String =
+    fun getHonorTranslateClass(context: Context): String =
         prefs(context).getString("honor_translate_activity", "") ?: ""
 
-    fun setHonorTranslateActivity(context: Context, actName: String) {
-        prefs(context).edit().putString("honor_translate_activity", actName.trim()).apply()
+    fun setHonorTranslateClass(context: Context, className: String) {
+        prefs(context).edit().putString("honor_translate_activity", className.trim()).apply()
+    }
+
+    fun getHonorTranslateType(context: Context): String =
+        prefs(context).getString("honor_translate_type", COMP_TYPE_ACTIVITY) ?: COMP_TYPE_ACTIVITY
+
+    fun setHonorTranslateType(context: Context, type: String) {
+        prefs(context).edit().putString("honor_translate_type", type).apply()
     }
 }

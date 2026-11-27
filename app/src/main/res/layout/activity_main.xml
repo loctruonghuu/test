@@ -84,7 +84,7 @@
                 android:text="@string/set_google_assistant" />
         </LinearLayout>
 
-        <!-- Edge Screen Swipe (Bottom-Right Default) -->
+        <!-- Edge Screen Swipe (Bottom-Right up to 150%) -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -155,9 +155,9 @@
             android:id="@+id/sliderYPos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:stepSize="2"
+            android:stepSize="5"
             android:valueFrom="10"
-            android:valueTo="98" />
+            android:valueTo="150" />
 
         <TextView
             android:id="@+id/tvHeightLabel"
@@ -232,7 +232,7 @@
             android:layout_marginTop="4dp"
             android:text="@string/vibrate_on_trigger" />
 
-        <!-- Honor MagicOS AI Translate Target -->
+        <!-- Honor MagicOS Screen Translation Target -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -257,11 +257,22 @@
             android:layout_marginTop="8dp"
             android:text="@string/scan_honor_activities" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/component_type" />
+
+        <Spinner
+            android:id="@+id/spinnerCompType"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
         <EditText
             android:id="@+id/editHonorPkg"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="4dp"
             android:hint="@string/hint_honor_pkg"
             android:inputType="textNoSuggestions"
             android:textSize="13sp" />

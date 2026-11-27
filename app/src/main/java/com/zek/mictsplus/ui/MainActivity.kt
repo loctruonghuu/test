@@ -32,8 +32,14 @@ class MainActivity : AppCompatActivity() {
 
     private val actionEntries = listOf(
         "Circle to Search (MiCTS)" to Prefs.ACTION_CTS,
-        "Honor MagicOS AI Translate" to Prefs.ACTION_HONOR_TRANSLATE,
+        "Honor MagicOS Screen Translate" to Prefs.ACTION_HONOR_TRANSLATE,
         "None" to Prefs.ACTION_NONE
+    )
+
+    private val compTypeEntries = listOf(
+        "Activity" to Prefs.COMP_TYPE_ACTIVITY,
+        "Service" to Prefs.COMP_TYPE_SERVICE,
+        "Broadcast" to Prefs.COMP_TYPE_BROADCAST
     )
 
     private val notifPermLauncher = registerForActivityResult(
@@ -99,6 +105,14 @@ class MainActivity : AppCompatActivity() {
         binding.spinnerSwipeDown.setSelection(
             actionEntries.indexOfFirst { it.second == Prefs.getSwipeDownAction(this) }.coerceAtLeast(0)
         )
+
+        binding.spinnerCompType.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            compTypeEntries.map { it.first }
+        )
+        val curTypeIdx = compTypeEntries.indexOfFirst { it.second == Prefs.getHonorTranslateType(this) }.coerceAtLeast(0)
+        binding.spinnerCompType.setSelection(curTypeIdx)
     }
 
     private fun setupControls() {
@@ -127,12 +141,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Honor AI Translate custom component fields + scanner
         binding.editHonorPkg.setText(Prefs.getHonorTranslatePkg(this))
-        binding.editHonorAct.setText(Prefs.getHonorTranslateActivity(this))
+        binding.editHonorAct.setText(Prefs.getHonorTranslateClass(this))
 
         binding.btnScanHonorActivities.setOnClickListener {
-            val candidates = HonorTranslateTrigger.scanHonorTranslateActivities(this)
+            val candidates = HonorTranslateTrigger.scanHonorScreenTranslateComponents(this)
             if (candidates.isEmpty()) {
                 Toast.makeText(this, R.string.no_honor_activities_found, Toast.LENGTH_LONG).show()
                 return@setOnClickListener
@@ -143,25 +156,40 @@ class MainActivity : AppCompatActivity() {
                 .setItems(labels) { _, which ->
                     val chosen = candidates[which]
                     binding.editHonorPkg.setText(chosen.packageName)
-                    binding.editHonorAct.setText(chosen.activityName)
+                    binding.editHonorAct.setText(chosen.className)
+                    val typeIdx = compTypeEntries.indexOfFirst { it.second == chosen.type }.coerceAtLeast(0)
+                    binding.spinnerCompType.setSelection(typeIdx)
                     saveAllPreferences()
-                    Toast.makeText(this, "Selected: ${chosen.activityName.substringAfterLast('.')}", Toast.LENGTH_SHORT).show()
+                    // Immediately test the chosen Screen Translation component
+                    val ok = HonorTranslateTrigger.launchCandidate(
+                        this,
+                        chosen.packageName,
+                        chosen.className,
+                        chosen.type
+                    )
+                    val msg = if (ok) {
+                        "Saved & tested: ${chosen.className.substringAfterLast('.')}"
+                    } else {
+                        "Saved, but launch was blocked by MagicOS. Try another entry."
+                    }
+                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
                 }
                 .setNeutralButton(R.string.reset_auto) { _, _ ->
                     binding.editHonorPkg.setText("")
                     binding.editHonorAct.setText("")
+                    binding.spinnerCompType.setSelection(0)
                     saveAllPreferences()
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
         }
 
-        // Sliders with live labels
-        val initY = Prefs.getEdgeYPercent(this).toFloat()
-        val initHeight = Prefs.getEdgeHeightDp(this).toFloat()
-        val initAlpha = Prefs.getEdgeAlpha(this).toFloat()
-        val initTriggerDelay = Prefs.getTriggerDelayMs(this).toFloat()
-        val initHoldDelay = Prefs.getHoldDelayMs(this).toFloat()
+        // Sliders (Y position supports 10..150%)
+        val initY = Prefs.getEdgeYPercent(this).toFloat().coerceIn(10f, 150f)
+        val initHeight = Prefs.getEdgeHeightDp(this).toFloat().coerceIn(60f, 260f)
+        val initAlpha = Prefs.getEdgeAlpha(this).toFloat().coerceIn(0f, 100f)
+        val initTriggerDelay = Prefs.getTriggerDelayMs(this).toFloat().coerceIn(0f, 1500f)
+        val initHoldDelay = Prefs.getHoldDelayMs(this).toFloat().coerceIn(0f, 1000f)
 
         binding.sliderYPos.value = initY
         binding.sliderHeight.value = initHeight
@@ -222,7 +250,8 @@ class MainActivity : AppCompatActivity() {
         Prefs.setHoldDelayMs(this, binding.sliderHoldDelay.value.toLong())
         Prefs.setVibrateEnabled(this, binding.switchVibrate.isChecked)
         Prefs.setHonorTranslatePkg(this, binding.editHonorPkg.text?.toString() ?: "")
-        Prefs.setHonorTranslateActivity(this, binding.editHonorAct.text?.toString() ?: "")
+        Prefs.setHonorTranslateClass(this, binding.editHonorAct.text?.toString() ?: "")
+        Prefs.setHonorTranslateType(this, compTypeEntries[binding.spinnerCompType.selectedItemPosition].second)
     }
 
     private fun openOverlaySettings() {

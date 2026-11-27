@@ -10,12 +10,15 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
-    <!-- Explicit package visibility for Honor MagicOS AI Translate & YOYO packages -->
+    <!-- Explicit package visibility for Honor MagicOS Screen Translation / AI packages -->
     <queries>
         <package android:name="com.hihonor.magictranslate" />
-        <package android:name="com.hihonor.magicvoice" />
-        <package android:name="com.hihonor.lens" />
+        <package android:name="com.hihonor.magictext" />
+        <package android:name="com.hihonor.hitouch" />
+        <package android:name="com.hihonor.vision" />
         <package android:name="com.hihonor.scanner" />
+        <package android:name="com.hihonor.lens" />
+        <package android:name="com.hihonor.magicvoice" />
         <package android:name="com.hihonor.translate" />
         <package android:name="com.hihonor.aitranslate" />
         <package android:name="com.hihonor.aisubtitle" />
@@ -55,7 +58,7 @@
             android:taskAffinity=""
             android:theme="@style/Theme.MiCtsPlus.Transparent" />
 
-        <!-- Transparent Activity to directly trigger Honor MagicOS AI Translate -->
+        <!-- Transparent Activity to directly trigger Honor MagicOS Screen Translation -->
         <activity
             android:name=".ui.TriggerHonorTranslateActivity"
             android:excludeFromRecents="true"
@@ -66,7 +69,7 @@
             android:taskAffinity=""
             android:theme="@style/Theme.MiCtsPlus.Transparent" />
 
-        <!-- Edge Screen Swipe Overlay Service (Bottom-Right default, No Accessibility Service) -->
+        <!-- Edge Screen Swipe Overlay Service (Bottom-Right up to 150%, No Accessibility) -->
         <service
             android:name=".edge.EdgeSwipeService"
             android:enabled="true"
@@ -74,7 +77,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Edge swipe gesture handle to trigger Circle to Search and Honor MagicOS AI Translate without Accessibility Services" />
+                android:value="Edge swipe gesture handle to trigger Circle to Search and Honor MagicOS Screen Translation without Accessibility Services" />
         </service>
 
         <!-- Quick Settings Tile: Circle to Search -->
@@ -89,7 +92,7 @@
             </intent-filter>
         </service>
 
-        <!-- Quick Settings Tile: Honor AI Translate -->
+        <!-- Quick Settings Tile: Honor Screen Translate -->
         <service
             android:name=".tiles.HonorTranslateTileService"
             android:exported="true"

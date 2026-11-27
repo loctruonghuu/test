@@ -18,6 +18,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.provider.Settings
+import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -35,11 +36,9 @@ import kotlin.math.abs
 
 /**
  * Persistent bottom-right edge swipe handle using SYSTEM_ALERT_WINDOW only.
+ * Supports 10%..150% vertical positioning down into the very bottom corner bezel
+ * using true full-screen physical bounds + FLAG_LAYOUT_NO_LIMITS.
  * Works completely WITHOUT Accessibility Service or Developer Options.
- *
- * Supports:
- *  - Custom Trigger Time Delay (ms): waits X ms after gesture before executing
- *  - Custom Swipe-and-Hold Delay (ms): requires holding finger for X ms after swipe (0 = instant)
  */
 class EdgeSwipeService : Service() {
 
@@ -123,6 +122,17 @@ class EdgeSwipeService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    private fun getRealScreenHeight(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            windowManager.currentWindowMetrics.bounds.height()
+        } else {
+            val dm = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(dm)
+            dm.heightPixels
+        }
+    }
+
     private fun setupHandles() {
         removeHandles()
         val side = Prefs.getEdgeSide(this)
@@ -136,11 +146,22 @@ class EdgeSwipeService : Service() {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun addEdgeHandle(isRight: Boolean) {
-        val dm = resources.displayMetrics
-        val density = dm.density
+        val density = resources.displayMetrics.density
+        val fullHeight = getRealScreenHeight()
         val widthPx = (Prefs.getEdgeWidthDp(this) * density).toInt()
         val heightPx = (Prefs.getEdgeHeightDp(this) * density).toInt()
-        val yPx = ((dm.heightPixels - heightPx) * (Prefs.getEdgeYPercent(this) / 100f)).toInt()
+        val yPercent = Prefs.getEdgeYPercent(this)
+
+        // 0..100% spans top edge to physical bottom edge.
+        // 100..150% pushes the handle even lower into the bottom corner bezel (keeping at least 35% touchable).
+        val baseBottomY = (fullHeight - heightPx).coerceAtLeast(0)
+        val yPx = if (yPercent <= 100) {
+            (baseBottomY * (yPercent / 100f)).toInt()
+        } else {
+            val extraRatio = (yPercent - 100) / 50f
+            baseBottomY + (extraRatio * heightPx * 0.65f).toInt()
+        }
+
         val alphaRatio = Prefs.getEdgeAlpha(this) / 100f
 
         val container = FrameLayout(this)
@@ -177,7 +198,8 @@ class EdgeSwipeService : Service() {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = (if (isRight) Gravity.END else Gravity.START) or Gravity.TOP
@@ -229,7 +251,6 @@ class EdgeSwipeService : Service() {
                                 triggered = true
                                 scheduleActionWithDelay(matchedAction)
                             } else {
-                                // Require holding the finger for holdMs before confirming trigger
                                 val r = Runnable {
                                     triggered = true
                                     pendingHoldRunnable = null
