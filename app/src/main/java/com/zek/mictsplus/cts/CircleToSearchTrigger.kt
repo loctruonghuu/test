@@ -13,11 +13,6 @@ import android.util.Log
 import com.zek.mictsplus.Prefs
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 
-/**
- * Rootless Circle to Search trigger based on parallelcc/MiCTS VIS mechanism.
- * Requires Google app set as Default Digital Assistant.
- * Does NOT require Root, LSPosed, Accessibility Service, or Developer Options.
- */
 object CircleToSearchTrigger {
     private const val TAG = "CircleToSearchTrigger"
 

@@ -9,7 +9,7 @@ import com.zek.mictsplus.Prefs
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            if (Prefs.isEdgeEnabled(context) && Settings.canDrawOverlays(context)) {
+            if (Prefs.isAnyOverlayEnabled(context) && Settings.canDrawOverlays(context)) {
                 EdgeSwipeService.start(context)
             }
         }

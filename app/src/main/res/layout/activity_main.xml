@@ -84,11 +84,156 @@
                 android:text="@string/set_google_assistant" />
         </LinearLayout>
 
-        <!-- Edge Screen Swipe (Bottom-Right up to 150%) -->
+        <!-- SECTION 1: Bottom Horizontal Navigation Bar Pill (Easy Tap Style) -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="22dp"
+            android:text="@string/section_nav_bar"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchNavBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/enable_nav_bar" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/nav_tap1_action" />
+
+        <Spinner
+            android:id="@+id/spinnerNavTap1"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/nav_hold_action" />
+
+        <Spinner
+            android:id="@+id/spinnerNavHold"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/nav_tap2_action" />
+
+        <Spinner
+            android:id="@+id/spinnerNavTap2"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/nav_skin" />
+
+        <Spinner
+            android:id="@+id/spinnerNavSkin"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+
+        <TextView
+            android:id="@+id/tvNavWidthLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/nav_width_fmt" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderNavWidth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="10"
+            android:valueFrom="40"
+            android:valueTo="320" />
+
+        <TextView
+            android:id="@+id/tvNavThicknessLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nav_thickness_fmt" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderNavThickness"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="2"
+            android:valueFrom="4"
+            android:valueTo="36" />
+
+        <TextView
+            android:id="@+id/tvNavHeightLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nav_height_fmt" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderNavHeight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="4"
+            android:valueFrom="0"
+            android:valueTo="120" />
+
+        <TextView
+            android:id="@+id/tvNavOffsetXLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nav_offset_x_fmt" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderNavOffsetX"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="10"
+            android:valueFrom="-150"
+            android:valueTo="150" />
+
+        <TextView
+            android:id="@+id/tvNavHoldDelayLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nav_hold_delay_fmt" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderNavHoldDelay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="50"
+            android:valueFrom="150"
+            android:valueTo="1000" />
+
+        <TextView
+            android:id="@+id/tvNavAlphaLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nav_alpha_fmt" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderNavAlpha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="5"
+            android:valueFrom="0"
+            android:valueTo="100" />
+
+        <!-- SECTION 2: Vertical Edge Screen Swipe -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
             android:text="@string/section_edge_swipe"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -103,7 +248,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="@string/edge_side" />
 
         <Spinner
@@ -114,7 +259,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="@string/swipe_in_action" />
 
         <Spinner
@@ -125,7 +270,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="@string/swipe_up_action" />
 
         <Spinner
@@ -136,7 +281,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="@string/swipe_down_action" />
 
         <Spinner
@@ -148,7 +293,7 @@
             android:id="@+id/tvYPosLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:text="@string/edge_y_pos_fmt" />
 
         <com.google.android.material.slider.Slider
@@ -187,7 +332,7 @@
             android:valueFrom="0"
             android:valueTo="100" />
 
-        <!-- Custom Time Delays -->
+        <!-- SECTION 3: Custom Time Delays -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -232,7 +377,7 @@
             android:layout_marginTop="4dp"
             android:text="@string/vibrate_on_trigger" />
 
-        <!-- Honor MagicOS Screen Translation Target -->
+        <!-- SECTION 4: Honor MagicOS Screen Translation Target -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -291,7 +436,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="28dp"
             android:text="@string/save_apply" />
 
     </LinearLayout>

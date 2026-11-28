@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MiCTS-HonorScreenTranslate-Edge"
+rootProject.name = "MiCTS-NavBar-HonorTranslate"
 include(":app")

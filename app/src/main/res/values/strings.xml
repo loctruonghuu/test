@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">MiCTS+ Honor Screen Translate</string>
-    <string name="app_subtitle">Circle to Search + Honor MagicOS Screen Translation + Bottom-Right Edge Swipe (No Accessibility, No Dev Options)</string>
+    <string name="app_name">MiCTS+ Nav Bar &amp; Screen Translate</string>
+    <string name="app_subtitle">Bottom Navigation Bar Pill + Edge Swipe + Circle to Search + Honor AI Screen Translate (No Accessibility, No Dev Options)</string>
 
     <string name="test_cts">Circle to Search</string>
     <string name="test_honor_translate">Screen Translate</string>
@@ -10,8 +10,21 @@
     <string name="overlay_granted">Overlay Granted ✓</string>
     <string name="set_google_assistant">Default Assistant</string>
 
-    <string name="section_edge_swipe">Edge Screen Swipe (Bottom-Right up to 150%)</string>
-    <string name="enable_edge_swipe">Enable Edge Swipe Handle</string>
+    <string name="section_nav_bar">Bottom Navigation Bar (Horizontal Pill)</string>
+    <string name="enable_nav_bar">Enable Bottom Navigation Bar Pill</string>
+    <string name="nav_tap1_action">Tap x1 Action</string>
+    <string name="nav_hold_action">Hold (Long Press) Action</string>
+    <string name="nav_tap2_action">Tap x2 (Double Tap) Action</string>
+    <string name="nav_skin">Bar Skin</string>
+    <string name="nav_width_fmt">Width: %1$d dp</string>
+    <string name="nav_thickness_fmt">Thickness: %1$d dp</string>
+    <string name="nav_height_fmt">Height (Bottom Margin): %1$d dp</string>
+    <string name="nav_offset_x_fmt">Horizontal Offset: %1$d dp</string>
+    <string name="nav_hold_delay_fmt">Nav Bar Hold Delay: %1$d ms</string>
+    <string name="nav_alpha_fmt">Bar Opacity: %1$d%%</string>
+
+    <string name="section_edge_swipe">Vertical Edge Screen Swipe (Up to 150%)</string>
+    <string name="enable_edge_swipe">Enable Vertical Edge Swipe Handle</string>
     <string name="edge_side">Handle Side</string>
     <string name="swipe_in_action">Swipe Inward Action</string>
     <string name="swipe_up_action">Swipe Up Action</string>
@@ -22,17 +35,17 @@
 
     <string name="section_timing">Custom Time Delay</string>
     <string name="trigger_delay_fmt">Trigger Time Delay: %1$d ms</string>
-    <string name="hold_delay_fmt">Swipe-and-Hold Delay: %1$d ms (0 = Instant)</string>
+    <string name="hold_delay_fmt">Edge Swipe-and-Hold Delay: %1$d ms (0 = Instant)</string>
     <string name="vibrate_on_trigger">Vibrate on Trigger</string>
 
-    <string name="section_honor_translate">Honor MagicOS Screen Translation Target</string>
-    <string name="honor_translate_hint">Auto-detect skips the main Translate app and targets Screen Translation directly. Tap Deep Scan to pick &amp; test the exact Activity/Service/Receiver on your MagicOS build.</string>
+    <string name="section_honor_translate">Honor MagicOS AI Screen Translation</string>
+    <string name="honor_translate_hint">Default target: com.hihonor.magictranslate/.screen.service.ScreenTranslateQuickService (with StatusBar clickTile + .screen. fallback). Tap Deep Scan to test other exported Honor components.</string>
     <string name="scan_honor_activities">Deep Scan Screen Translate Components</string>
     <string name="component_type">Target Type</string>
-    <string name="hint_honor_pkg">Package (optional, e.g. com.hihonor.magictranslate)</string>
-    <string name="hint_honor_act">Class name (Screen Translation Activity / Service / Receiver)</string>
+    <string name="hint_honor_pkg">Package (e.g. com.hihonor.magictranslate)</string>
+    <string name="hint_honor_act">Class (e.g. com.hihonor.magictranslate.screen.service.ScreenTranslateQuickService)</string>
     <string name="pick_honor_activity_title">Pick &amp; Test Screen Translate Component</string>
-    <string name="reset_auto">Reset to Auto</string>
+    <string name="reset_default_quick_service">Reset to ScreenTranslateQuickService</string>
     <string name="no_honor_activities_found">No exported Honor Screen Translate components found.</string>
 
     <string name="save_apply">Save &amp; Apply</string>
@@ -42,12 +55,11 @@
     <string name="shortcut_cts">Circle to Search</string>
     <string name="shortcut_translate">Screen Translate</string>
 
-    <string name="edge_channel_name">Edge Swipe Service</string>
-    <string name="edge_notif_title">Edge Swipe Active</string>
-    <string name="edge_notif_text">Swipe from the bottom-right edge for Circle to Search or Honor Screen Translate</string>
+    <string name="edge_channel_name">Nav Bar &amp; Edge Overlay</string>
+    <string name="edge_notif_title">MiCTS+ Overlay Active</string>
+    <string name="edge_notif_text">Bottom navigation bar &amp; edge gestures ready</string>
 
     <string name="overlay_permission_required">Please grant "Display over other apps" permission first.</string>
     <string name="cts_trigger_failed">Trigger failed! Set Google as Default Digital Assistant.</string>
-    <string name="honor_translate_failed">Screen Translation component not auto-matched. Tap "Deep Scan Screen Translate Components" to pick the exact overlay entry on your MagicOS version.</string>
     <string name="settings_saved">Settings saved &amp; applied!</string>
 </resources>

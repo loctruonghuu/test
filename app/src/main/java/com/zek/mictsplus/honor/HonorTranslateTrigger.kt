@@ -1,13 +1,16 @@
 package com.zek.mictsplus.honor
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.IBinder
 import android.util.Log
 import com.zek.mictsplus.Prefs
 import com.zek.mictsplus.cts.CircleToSearchTrigger
+import org.lsposed.hiddenapibypass.HiddenApiBypass
 
 data class HonorComponentCandidate(
     val packageName: String,
@@ -17,13 +20,25 @@ data class HonorComponentCandidate(
     val score: Int
 )
 
+data class TriggerResult(
+    val success: Boolean,
+    val detail: String
+)
+
 /**
- * Triggers Honor MagicOS AI Screen Translation directly (WITHOUT opening the main Translate app).
- * Supports exported Activities, Services, and Broadcast Receivers across MagicOS AI packages.
- * Works completely WITHOUT Accessibility Services, Developer Options, or Root.
+ * Triggers Honor MagicOS AI Screen Translation using:
+ *  1) Direct call to com.hihonor.magictranslate/.screen.service.ScreenTranslateQuickService
+ *  2) HiddenApiBypass IStatusBarService.clickTile(ScreenTranslateQuickService)
+ *  3) Exported .screen. / ScreenTranslate Activities, Services, and Receivers in com.hihonor.magictranslate
+ *  4) Known MagicOS Screen Translate intent actions
  */
 object HonorTranslateTrigger {
     private const val TAG = "HonorTranslateTrigger"
+
+    private val QUICK_TILE_COMPONENT = ComponentName(
+        Prefs.DEFAULT_HONOR_PKG,
+        Prefs.DEFAULT_HONOR_QUICK_SERVICE
+    )
 
     private val KNOWN_PACKAGES = listOf(
         "com.hihonor.magictranslate",
@@ -39,22 +54,17 @@ object HonorTranslateTrigger {
         "com.hihonor.vassistant"
     )
 
-    // Strong indicators of on-screen / full-screen / floating translation overlay
     private val SCREEN_TRANSLATE_KEYWORDS = listOf(
         "screentranslat",
         "screen_translat",
         "fullscreentranslat",
-        "full_screen_translat",
         "floattranslat",
-        "float_translat",
         "overlaytranslat",
         "capturetranslat",
         "transscreen",
-        "screensubtitle",
-        "screen"
+        ".screen."
     )
 
-    // Words that indicate the main app home screen (avoid auto-picking these!)
     private val MAIN_APP_EXCLUDE = listOf(
         "mainactivity",
         "homeactivity",
@@ -71,46 +81,105 @@ object HonorTranslateTrigger {
         "call"
     )
 
-    fun trigger(context: Context): Boolean {
+    fun trigger(context: Context): Boolean = triggerWithResult(context).success
+
+    fun triggerWithResult(context: Context): TriggerResult {
         if (Prefs.isVibrateEnabled(context)) {
             CircleToSearchTrigger.vibrate(context)
         }
 
-        // 1. If user explicitly selected a component via the Scanner, launch it directly
-        val customPkg = Prefs.getHonorTranslatePkg(context)
-        val customClass = Prefs.getHonorTranslateClass(context)
-        val customType = Prefs.getHonorTranslateType(context)
-        if (customPkg.isNotEmpty() && customClass.isNotEmpty()) {
-            return launchCandidate(context, customPkg, customClass, customType)
-        }
+        val targetPkg = Prefs.getHonorTranslatePkg(context)
+        val targetClass = Prefs.getHonorTranslateClass(context)
+        val targetType = Prefs.getHonorTranslateType(context)
+        var lastError = ""
 
-        // 2. Auto-detect ONLY dedicated Screen Translation components (skip main app launchers!)
-        val candidates = scanHonorScreenTranslateComponents(context)
-        val screenSpecific = candidates.filter { it.score >= 50 }
-        for (cand in screenSpecific) {
-            if (launchCandidate(context, cand.packageName, cand.className, cand.type)) {
-                Log.d(TAG, "Auto-launched screen translate [${cand.type}] ${cand.packageName}/${cand.className}")
-                return true
+        // 1. Try configured target component first (defaults to ScreenTranslateQuickService)
+        if (targetPkg.isNotEmpty() && targetClass.isNotEmpty()) {
+            val isQuickTile = targetClass == Prefs.DEFAULT_HONOR_QUICK_SERVICE ||
+                targetClass.endsWith("ScreenTranslateQuickService")
+
+            if (isQuickTile) {
+                // 1a. Try StatusBarService.clickTile(ComponentName) via HiddenApiBypass
+                val tileRes = tryClickQuickTile(ComponentName(targetPkg, targetClass))
+                if (tileRes.success) return tileRes
+                lastError = tileRes.detail
             }
+
+            // 1b. Try direct startService / startActivity / sendBroadcast
+            val directRes = launchCandidateWithResult(context, targetPkg, targetClass, targetType)
+            if (directRes.success) return directRes
+            lastError = directRes.detail
         }
 
-        // 3. Fallback: try known MagicOS Screen Translation intent actions
+        // 2. Always attempt clickTile on ScreenTranslateQuickService if not already tried
+        if (targetClass != Prefs.DEFAULT_HONOR_QUICK_SERVICE) {
+            val tileRes = tryClickQuickTile(QUICK_TILE_COMPONENT)
+            if (tileRes.success) return tileRes
+        }
+
+        // 3. Auto-detect exported (non-privileged) .screen. / ScreenTranslate components
+        val candidates = scanHonorScreenTranslateComponents(context)
+        val screenSpecific = candidates.filter {
+            it.score >= 50 && it.className != targetClass
+        }
+        for (cand in screenSpecific) {
+            val res = launchCandidateWithResult(context, cand.packageName, cand.className, cand.type)
+            if (res.success) return res
+        }
+
+        // 4. Known MagicOS Screen Translation intent actions
         val knownActions = listOf(
             "com.hihonor.magictranslate.action.SCREEN_TRANSLATE",
             "com.hihonor.magictranslate.SCREEN_TRANSLATE",
             "com.hihonor.action.SCREEN_TRANSLATE",
             "com.hihonor.hitouch.action.SCREEN_TRANSLATE",
-            "com.hihonor.vision.action.SCREEN_TRANSLATE",
-            "com.hihonor.scanner.action.SCREEN_TRANSLATE"
+            "com.hihonor.vision.action.SCREEN_TRANSLATE"
         )
         for (action in knownActions) {
-            if (tryAction(context, action)) return true
+            if (tryAction(context, action)) {
+                return TriggerResult(true, "Launched via action $action")
+            }
         }
 
-        return false
+        return TriggerResult(
+            false,
+            lastError.ifBlank { "No callable Screen Translate component found." }
+        )
     }
 
-    fun launchCandidate(context: Context, pkg: String, className: String, type: String): Boolean {
+    @SuppressLint("PrivateApi")
+    private fun tryClickQuickTile(component: ComponentName): TriggerResult {
+        return try {
+            val sm = Class.forName("android.os.ServiceManager")
+            val getService = sm.getMethod("getService", String::class.java)
+            val binder = getService.invoke(null, "statusbar") as? IBinder
+                ?: return TriggerResult(false, "statusbar binder is null")
+
+            val stubClass = Class.forName("com.android.internal.statusbar.IStatusBarService\$Stub")
+            val asInterface = stubClass.getMethod("asInterface", IBinder::class.java)
+            val sbs = asInterface.invoke(null, binder)
+                ?: return TriggerResult(false, "IStatusBarService is null")
+
+            val iSbsClass = Class.forName("com.android.internal.statusbar.IStatusBarService")
+            HiddenApiBypass.invoke(iSbsClass, sbs, "clickTile", component)
+            Log.d(TAG, "clickTile succeeded for $component")
+            TriggerResult(true, "Triggered via StatusBar clickTile")
+        } catch (t: Throwable) {
+            val cause = t.cause ?: t
+            Log.w(TAG, "clickTile blocked: ${cause.javaClass.simpleName}: ${cause.message}")
+            TriggerResult(false, "clickTile blocked (${cause.javaClass.simpleName})")
+        }
+    }
+
+    fun launchCandidate(context: Context, pkg: String, className: String, type: String): Boolean =
+        launchCandidateWithResult(context, pkg, className, type).success
+
+    fun launchCandidateWithResult(
+        context: Context,
+        pkg: String,
+        className: String,
+        type: String
+    ): TriggerResult {
         return try {
             val intent = Intent().apply {
                 component = ComponentName(pkg, className)
@@ -122,30 +191,31 @@ object HonorTranslateTrigger {
                 Prefs.COMP_TYPE_SERVICE -> {
                     try {
                         context.startService(intent)
-                    } catch (_: Throwable) {
+                    } catch (_: IllegalStateException) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             context.startForegroundService(intent)
                         } else {
                             throw IllegalStateException("startService failed")
                         }
                     }
-                    true
+                    TriggerResult(true, "Started service ${className.substringAfterLast('.')}")
                 }
 
                 Prefs.COMP_TYPE_BROADCAST -> {
                     context.sendBroadcast(intent)
-                    true
+                    TriggerResult(true, "Sent broadcast ${className.substringAfterLast('.')}")
                 }
 
                 else -> {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     context.startActivity(intent)
-                    true
+                    TriggerResult(true, "Started activity ${className.substringAfterLast('.')}")
                 }
             }
         } catch (t: Throwable) {
-            Log.w(TAG, "Failed to launch [$type] $pkg/$className: ${t.message}")
-            false
+            val msg = "${t.javaClass.simpleName}: ${t.message}"
+            Log.w(TAG, "Failed [$type] $pkg/$className -> $msg")
+            TriggerResult(false, msg)
         }
     }
 
@@ -164,10 +234,6 @@ object HonorTranslateTrigger {
         }
     }
 
-    /**
-     * Deep-scans installed Honor system packages for exported Activities, Services, and Receivers
-     * related to Screen Translation, ranking dedicated Screen Translate overlays at the very top.
-     */
     fun scanHonorScreenTranslateComponents(context: Context): List<HonorComponentCandidate> {
         val pm = context.packageManager
         val results = mutableListOf<HonorComponentCandidate>()
@@ -203,11 +269,10 @@ object HonorTranslateTrigger {
         fun scoreComponent(pkg: String, cls: String): Int {
             val lower = cls.lowercase()
             var score = 0
-            if (pkg == "com.hihonor.magictranslate") score += 25
+            if (pkg == Prefs.DEFAULT_HONOR_PKG) score += 30
             if (SCREEN_TRANSLATE_KEYWORDS.any { lower.contains(it) }) score += 60
             if (lower.contains("translat")) score += 20
             if (lower.contains("float") || lower.contains("overlay") || lower.contains("full") || lower.contains("capture")) score += 25
-            if (lower.contains("ocr") || lower.contains("text")) score += 10
             if (MAIN_APP_EXCLUDE.any { lower.contains(it) }) score -= 60
             return score
         }
@@ -216,56 +281,50 @@ object HonorTranslateTrigger {
             val pkg = pkgInfo.packageName
             val isTranslatePkg = pkg.contains("translate", ignoreCase = true)
 
-            // 1. Exported Activities
             pkgInfo.activities?.forEach { act ->
                 if (!act.exported || !act.enabled || !act.permission.isNullOrBlank()) return@forEach
                 val lower = act.name.lowercase()
-                if (!isTranslatePkg && !lower.contains("translat") && !lower.contains("screen") && !lower.contains("subtitle")) return@forEach
+                if (!isTranslatePkg && !lower.contains("translat") && !lower.contains("screen")) return@forEach
                 val simple = act.name.substringAfterLast('.')
-                val sc = scoreComponent(pkg, act.name)
                 results.add(
                     HonorComponentCandidate(
                         packageName = pkg,
                         className = act.name,
                         type = Prefs.COMP_TYPE_ACTIVITY,
                         label = "[ACT] $simple — $pkg",
-                        score = sc
+                        score = scoreComponent(pkg, act.name)
                     )
                 )
             }
 
-            // 2. Exported Services
             pkgInfo.services?.forEach { svc ->
                 if (!svc.exported || !svc.enabled || !svc.permission.isNullOrBlank()) return@forEach
                 val lower = svc.name.lowercase()
                 if (!isTranslatePkg && !lower.contains("translat") && !lower.contains("screen")) return@forEach
                 val simple = svc.name.substringAfterLast('.')
-                val sc = scoreComponent(pkg, svc.name)
                 results.add(
                     HonorComponentCandidate(
                         packageName = pkg,
                         className = svc.name,
                         type = Prefs.COMP_TYPE_SERVICE,
                         label = "[SVC] $simple — $pkg",
-                        score = sc
+                        score = scoreComponent(pkg, svc.name)
                     )
                 )
             }
 
-            // 3. Exported Broadcast Receivers
             pkgInfo.receivers?.forEach { rcv ->
                 if (!rcv.exported || !rcv.enabled || !rcv.permission.isNullOrBlank()) return@forEach
                 val lower = rcv.name.lowercase()
                 if (!isTranslatePkg && !lower.contains("translat") && !lower.contains("screen")) return@forEach
                 val simple = rcv.name.substringAfterLast('.')
-                val sc = scoreComponent(pkg, rcv.name)
                 results.add(
                     HonorComponentCandidate(
                         packageName = pkg,
                         className = rcv.name,
                         type = Prefs.COMP_TYPE_BROADCAST,
                         label = "[RCV] $simple — $pkg",
-                        score = sc
+                        score = scoreComponent(pkg, rcv.name)
                     )
                 )
             }

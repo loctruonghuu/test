@@ -1,9 +1,9 @@
-# MiCTS+ Honor Screen Translate & Bottom-Right Edge Swipe (v3)
+# MiCTS+ Navigation Bar Pill & Honor Screen Translate (v4)
 
-Standalone Android project based on [parallelcc/MiCTS](https://github.com/parallelcc/MiCTS):
-1. **Circle to Search Trigger** (MiCTS VIS `showSessionFromSession` via `HiddenApiBypass`)
-2. **Honor MagicOS Screen Translation Trigger** — skips the main Translate app launcher and targets exported **Screen Translation Activities, Services, and Broadcast Receivers** directly (`com.hihonor.magictranslate`, `com.hihonor.magictext`, `com.hihonor.hitouch`, `com.hihonor.vision`, `com.hihonor.scanner`, etc.), with a built-in **Deep Scanner** that lets you tap & immediately test any entry.
-3. **Bottom-Right Edge Handle up to 150%** — uses full physical screen height (`currentWindowMetrics`) + `FLAG_LAYOUT_NO_LIMITS` so the handle can sit all the way down in the bottom-right corner bezel (`10%–150%`, default `105%`).
-4. **Custom Time Delays** — configurable Trigger Time Delay (`0–1500 ms`) and Swipe-and-Hold Delay (`0–1000 ms`).
+Standalone Android project combining:
+1. **Bottom Horizontal Navigation Bar Pill (Easy Tap style)** — supports **Tap x1**, **Hold**, and **Tap x2**, with customizable **Width**, **Thickness**, **Height (bottom margin)**, **Horizontal Offset**, **Hold Delay**, **Opacity**, and **Rainbow / White / Cyan / Invisible** skins.
+2. **Vertical Edge Screen Swipe Handle** — supports **10%–150%** vertical positioning down into the bottom-right corner bezel.
+3. **Circle to Search Trigger** (MiCTS VIS `showSessionFromSession` via `HiddenApiBypass`).
+4. **Honor MagicOS AI Screen Translation** — defaults to `com.hihonor.magictranslate/.screen.service.ScreenTranslateQuickService` (tries `IStatusBarService.clickTile` + direct service start + `.screen.` fallbacks + built-in Deep Scanner).
 
 **Zero Accessibility Services. Zero Developer Options / ADB. Zero Root.**

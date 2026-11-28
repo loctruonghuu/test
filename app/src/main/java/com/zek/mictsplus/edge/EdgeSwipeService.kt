@@ -35,10 +35,11 @@ import com.zek.mictsplus.ui.MainActivity
 import kotlin.math.abs
 
 /**
- * Persistent bottom-right edge swipe handle using SYSTEM_ALERT_WINDOW only.
- * Supports 10%..150% vertical positioning down into the very bottom corner bezel
- * using true full-screen physical bounds + FLAG_LAYOUT_NO_LIMITS.
- * Works completely WITHOUT Accessibility Service or Developer Options.
+ * Lightweight single foreground overlay service managing:
+ *  1) Bottom Horizontal Navigation Bar Pill (Tap x1, Hold, Tap x2, Rainbow/White/Cyan/Transparent skin)
+ *  2) Vertical Edge Screen Swipe Handle (10..150% vertical position, Swipe In/Up/Down)
+ *
+ * Works 100% WITHOUT Accessibility Service or Developer Options.
  */
 class EdgeSwipeService : Service() {
 
@@ -49,6 +50,7 @@ class EdgeSwipeService : Service() {
 
         private const val CHANNEL_ID = "edge_swipe_channel"
         private const val NOTIF_ID = 1001
+        private const val DOUBLE_TAP_WINDOW_MS = 230L
 
         fun start(context: Context) {
             val intent = Intent(context, EdgeSwipeService::class.java).apply {
@@ -62,11 +64,18 @@ class EdgeSwipeService : Service() {
         }
 
         fun reload(context: Context) {
-            if (!Prefs.isEdgeEnabled(context)) return
+            if (!Prefs.isAnyOverlayEnabled(context)) {
+                stop(context)
+                return
+            }
             val intent = Intent(context, EdgeSwipeService::class.java).apply {
                 action = ACTION_RELOAD
             }
-            context.startService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
         }
 
         fun stop(context: Context) {
@@ -75,7 +84,7 @@ class EdgeSwipeService : Service() {
     }
 
     private lateinit var windowManager: WindowManager
-    private val activeHandles = mutableListOf<View>()
+    private val activeViews = mutableListOf<View>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate() {
@@ -85,8 +94,8 @@ class EdgeSwipeService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_STOP) {
-            removeHandles()
+        if (intent?.action == ACTION_STOP || !Prefs.isAnyOverlayEnabled(this)) {
+            removeAllOverlays()
             stopSelf()
             return START_NOT_STICKY
         }
@@ -94,6 +103,7 @@ class EdgeSwipeService : Service() {
         if (!Settings.canDrawOverlays(this)) {
             Toast.makeText(this, R.string.overlay_permission_required, Toast.LENGTH_SHORT).show()
             Prefs.setEdgeEnabled(this, false)
+            Prefs.setNavBarEnabled(this, false)
             stopSelf()
             return START_NOT_STICKY
         }
@@ -110,13 +120,13 @@ class EdgeSwipeService : Service() {
             startForeground(NOTIF_ID, notif)
         }
 
-        setupHandles()
+        setupOverlays()
         return START_STICKY
     }
 
     override fun onDestroy() {
         mainHandler.removeCallbacksAndMessages(null)
-        removeHandles()
+        removeAllOverlays()
         super.onDestroy()
     }
 
@@ -133,17 +143,210 @@ class EdgeSwipeService : Service() {
         }
     }
 
-    private fun setupHandles() {
-        removeHandles()
-        val side = Prefs.getEdgeSide(this)
-        if (side == Prefs.SIDE_RIGHT || side == Prefs.SIDE_BOTH) {
-            addEdgeHandle(isRight = true)
+    private fun setupOverlays() {
+        removeAllOverlays()
+        if (Prefs.isNavBarEnabled(this)) {
+            addBottomNavBarPill()
         }
-        if (side == Prefs.SIDE_LEFT || side == Prefs.SIDE_BOTH) {
-            addEdgeHandle(isRight = false)
+        if (Prefs.isEdgeEnabled(this)) {
+            val side = Prefs.getEdgeSide(this)
+            if (side == Prefs.SIDE_RIGHT || side == Prefs.SIDE_BOTH) {
+                addEdgeHandle(isRight = true)
+            }
+            if (side == Prefs.SIDE_LEFT || side == Prefs.SIDE_BOTH) {
+                addEdgeHandle(isRight = false)
+            }
         }
     }
 
+    /**
+     * Bottom Horizontal Navigation Bar Pill (Easy Tap style)
+     * Supports Tap x1, Hold, and Tap x2 with configurable Width, Thickness, Height, Offset, Skin & Opacity.
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun addBottomNavBarPill() {
+        val density = resources.displayMetrics.density
+        val widthPx = (Prefs.getNavWidthDp(this) * density).toInt()
+        val thicknessPx = (Prefs.getNavThicknessDp(this) * density).toInt()
+        val touchHeightPx = maxOf(thicknessPx + (12 * density).toInt(), (24 * density).toInt())
+        val bottomMarginPx = (Prefs.getNavBottomHeightDp(this) * density).toInt()
+        val offsetXPx = (Prefs.getNavOffsetXDp(this) * density).toInt()
+        val alphaRatio = Prefs.getNavAlpha(this) / 100f
+        val skin = Prefs.getNavSkin(this)
+
+        val container = FrameLayout(this)
+
+        val pillDrawable = when (skin) {
+            Prefs.SKIN_RAINBOW -> GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(
+                    Color.parseColor("#00D2FF"),
+                    Color.parseColor("#38EF7D"),
+                    Color.parseColor("#FFD200"),
+                    Color.parseColor("#FF512F"),
+                    Color.parseColor("#DD2476")
+                )
+            )
+            Prefs.SKIN_CYAN -> GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(
+                    Color.parseColor("#2193B0"),
+                    Color.parseColor("#6DD5ED")
+                )
+            )
+            Prefs.SKIN_TRANSPARENT -> GradientDrawable().apply {
+                setColor(Color.TRANSPARENT)
+            }
+            else -> GradientDrawable().apply {
+                setColor(Color.WHITE)
+            }
+        }.apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = thicknessPx.toFloat()
+        }
+
+        val pill = View(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                widthPx,
+                thicknessPx,
+                Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
+            ).apply {
+                bottomMargin = (4 * density).toInt()
+            }
+            background = pillDrawable
+            alpha = if (skin == Prefs.SKIN_TRANSPARENT) 0f else alphaRatio
+        }
+        container.addView(pill)
+
+        val params = WindowManager.LayoutParams(
+            widthPx + (16 * density).toInt(),
+            touchHeightPx,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            x = offsetXPx
+            y = bottomMarginPx
+        }
+
+        val moveSlopPx = 22 * density
+        var downX = 0f
+        var downY = 0f
+        var movedTooFar = false
+        var holdTriggered = false
+        var pendingHoldRunnable: Runnable? = null
+        var pendingSingleTapRunnable: Runnable? = null
+
+        fun cancelHold() {
+            pendingHoldRunnable?.let { mainHandler.removeCallbacks(it) }
+            pendingHoldRunnable = null
+        }
+
+        fun cancelSingleTap() {
+            pendingSingleTapRunnable?.let { mainHandler.removeCallbacks(it) }
+            pendingSingleTapRunnable = null
+        }
+
+        container.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = event.rawX
+                    downY = event.rawY
+                    movedTooFar = false
+                    holdTriggered = false
+                    cancelHold()
+
+                    if (skin != Prefs.SKIN_TRANSPARENT) {
+                        pill.animate().scaleY(1.25f).alpha(1f).setDuration(80).start()
+                    }
+
+                    val holdAction = Prefs.getNavHoldAction(this)
+                    if (holdAction != Prefs.ACTION_NONE) {
+                        val r = Runnable {
+                            if (!movedTooFar) {
+                                holdTriggered = true
+                                cancelSingleTap()
+                                scheduleActionWithDelay(holdAction)
+                            }
+                        }
+                        pendingHoldRunnable = r
+                        mainHandler.postDelayed(r, Prefs.getNavHoldDelayMs(this))
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = abs(event.rawX - downX)
+                    val dy = abs(event.rawY - downY)
+                    if (dx > moveSlopPx || dy > moveSlopPx) {
+                        movedTooFar = true
+                        cancelHold()
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    cancelHold()
+                    if (skin != Prefs.SKIN_TRANSPARENT) {
+                        pill.animate().scaleY(1f).alpha(alphaRatio).setDuration(120).start()
+                    }
+
+                    if (!movedTooFar && !holdTriggered) {
+                        val tap1Action = Prefs.getNavTap1Action(this)
+                        val tap2Action = Prefs.getNavTap2Action(this)
+
+                        if (tap2Action == Prefs.ACTION_NONE) {
+                            // No double-tap configured -> fire single tap immediately
+                            if (tap1Action != Prefs.ACTION_NONE) {
+                                scheduleActionWithDelay(tap1Action)
+                            }
+                        } else {
+                            if (pendingSingleTapRunnable != null) {
+                                // Second tap arrived within window -> Double Tap!
+                                cancelSingleTap()
+                                scheduleActionWithDelay(tap2Action)
+                            } else {
+                                // Wait briefly to see if a second tap comes
+                                val r = Runnable {
+                                    pendingSingleTapRunnable = null
+                                    if (tap1Action != Prefs.ACTION_NONE) {
+                                        scheduleActionWithDelay(tap1Action)
+                                    }
+                                }
+                                pendingSingleTapRunnable = r
+                                mainHandler.postDelayed(r, DOUBLE_TAP_WINDOW_MS)
+                            }
+                        }
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_CANCEL -> {
+                    cancelHold()
+                    if (skin != Prefs.SKIN_TRANSPARENT) {
+                        pill.animate().scaleY(1f).alpha(alphaRatio).setDuration(120).start()
+                    }
+                    true
+                }
+
+                else -> false
+            }
+        }
+
+        try {
+            windowManager.addView(container, params)
+            activeViews.add(container)
+        } catch (_: Throwable) {
+        }
+    }
+
+    /**
+     * Vertical Edge Screen Swipe Handle (supports 10..150% vertical position)
+     */
     @SuppressLint("ClickableViewAccessibility")
     private fun addEdgeHandle(isRight: Boolean) {
         val density = resources.displayMetrics.density
@@ -152,8 +355,6 @@ class EdgeSwipeService : Service() {
         val heightPx = (Prefs.getEdgeHeightDp(this) * density).toInt()
         val yPercent = Prefs.getEdgeYPercent(this)
 
-        // 0..100% spans top edge to physical bottom edge.
-        // 100..150% pushes the handle even lower into the bottom corner bezel (keeping at least 35% touchable).
         val baseBottomY = (fullHeight - heightPx).coerceAtLeast(0)
         val yPx = if (yPercent <= 100) {
             (baseBottomY * (yPercent / 100f)).toInt()
@@ -163,7 +364,6 @@ class EdgeSwipeService : Service() {
         }
 
         val alphaRatio = Prefs.getEdgeAlpha(this) / 100f
-
         val container = FrameLayout(this)
 
         val pill = View(this).apply {
@@ -183,7 +383,6 @@ class EdgeSwipeService : Service() {
         }
         container.addView(pill)
 
-        // Exclude this edge handle rect from Android's system Back gesture
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             container.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
                 if (v.width > 0 && v.height > 0) {
@@ -276,7 +475,7 @@ class EdgeSwipeService : Service() {
 
         try {
             windowManager.addView(container, params)
-            activeHandles.add(container)
+            activeViews.add(container)
         } catch (_: Throwable) {
         }
     }
@@ -293,23 +492,23 @@ class EdgeSwipeService : Service() {
                 }
 
                 Prefs.ACTION_HONOR_TRANSLATE -> {
-                    val ok = HonorTranslateTrigger.trigger(this)
-                    if (!ok) {
-                        Toast.makeText(this, R.string.honor_translate_failed, Toast.LENGTH_LONG).show()
+                    val res = HonorTranslateTrigger.triggerWithResult(this)
+                    if (!res.success) {
+                        Toast.makeText(this, "Screen Translate: ${res.detail}", Toast.LENGTH_LONG).show()
                     }
                 }
             }
         }, delayMs)
     }
 
-    private fun removeHandles() {
-        for (v in activeHandles) {
+    private fun removeAllOverlays() {
+        for (v in activeViews) {
             try {
                 windowManager.removeView(v)
             } catch (_: Throwable) {
             }
         }
-        activeHandles.clear()
+        activeViews.clear()
     }
 
     private fun createNotificationChannel() {
